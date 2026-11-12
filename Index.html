@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Studio AI — Produksi Otomatis</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e1a;color:#e2e8f0;font-family:-apple-system,system-ui,sans-serif}
+#c{position:fixed;inset:0}
+header{position:fixed;top:0;left:0;right:0;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:linear-gradient(180deg,rgba(10,14,26,.95),rgba(10,14,26,0));z-index:10;pointer-events:none}
+header h1{font-size:15px;font-weight:600}
+header .sub{font-size:11px;color:#64748b;margin-top:2px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,.2);color:#6ee7b7;font-size:10px;margin-left:6px}
+#ctrl{position:fixed;top:70px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.cb{width:44px;height:44px;border-radius:14px;background:rgba(30,41,59,.9);border:1px solid rgba(51,65,85,.8);color:#e2e8f0;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+.cb.primary{background:rgba(16,185,129,.9);border-color:#10b981;color:white;font-size:22px;box-shadow:0 4px 12px rgba(16,185,129,.4)}
+.cb.active{background:rgba(59,130,246,.3);border-color:#3b82f6;color:#60a5fa}
+#legend{position:fixed;bottom:12px;left:12px;right:12px;display:flex;gap:6px;z-index:10;overflow-x:auto;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom)}
+#legend::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:8px 12px;border-radius:10px;background:rgba(30,41,59,.9);border:1px solid rgba(51,65,85,.8);font-size:11px;color:#94a3b8;cursor:pointer;backdrop-filter:blur(10px);white-space:nowrap}
+.pill.active{background:rgba(59,130,246,.2);border-color:#3b82f6;color:#60a5fa}
+#ap{position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,.98);border-top:1px solid #1e293b;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s;z-index:20;backdrop-filter:blur(20px);max-height:75vh;overflow-y:auto}
+#ap.show{transform:translateY(0)}
+#ap .h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+#ap .e{font-size:36px}
+#ap .n{font-size:17px;font-weight:600}
+#ap .r{font-size:12px;margin-top:2px}
+#ap .d{font-size:13px;color:#94a3b8;line-height:1.5;margin-bottom:12px}
+#ap .actions{display:flex;gap:8px}
+#ap .actions button{flex:1;padding:12px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;background:#3b82f6;color:white}
+#ap .actions button.close{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.lbl{background:rgba(15,23,42,.92);padding:4px 10px;border-radius:8px;text-align:center;line-height:1.25;border:1px solid rgba(59,130,246,.3);pointer-events:none;backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.lbl .nm{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
+.lbl .rl{font-size:9px;color:#94a3b8;display:block;margin-top:1px;white-space:nowrap}
+.lbl.fl{padding:5px 14px;font-weight:700;font-size:11px}
+#ld{position:fixed;inset:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .5s}
+#ld.hide{opacity:0;pointer-events:none}
+#ld h2{font-size:16px;margin-bottom:8px}
+#ld p{font-size:12px;color:#64748b;margin-bottom:20px}
+.sp{width:30px;height:30px;border:3px solid #1e293b;border-top-color:#10b981;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#prod{position:fixed;inset:0;background:#0a0e1a;z-index:150;display:none;flex-direction:column}
+#prod.show{display:flex}
+#prodh{display:flex;align-items:center;gap:12px;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));background:#1e293b;border-bottom:1px solid #334155}
+#prodh h2{flex:1;font-size:15px;font-weight:600}
+#prodc{width:36px;height:36px;border-radius:50%;background:#334155;border:none;color:#e2e8f0;font-size:16px;cursor:pointer}
+#prodb{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.prog-card{background:#1e293b;border-radius:12px;padding:16px}
+.prog-card .stage{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.prog-card .detail{font-size:11px;color:#94a3b8;margin-bottom:12px;line-height:1.5;white-space:pre-wrap;max-height:150px;overflow-y:auto;font-family:monospace}
+.prog-bar{height:10px;border-radius:5px;background:#0a0e1a;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);width:0%;transition:width .4s;border-radius:5px}
+.prog-pct{font-size:11px;color:#94a3b8;text-align:right}
+.result-card{background:rgba(16,185,129,.1);border:1px solid #10b981;border-radius:12px;padding:16px;display:none}
+.result-card.show{display:block}
+.result-card h3{font-size:14px;color:#10b981;margin-bottom:10px}
+.result-card p{font-size:12px;color:#94a3b8;line-height:1.5;margin-bottom:12px}
+.result-card video{width:100%;border-radius:8px;margin-bottom:12px;background:#000}
+.result-card img{width:100%;border-radius:8px;margin-bottom:12px}
+.result-card .dl-btns{display:flex;flex-direction:column;gap:8px}
+.result-card button{padding:14px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:#10b981;color:white}
+.result-card button.secondary{background:#334155;color:#e2e8f0}
+#prod-foot{padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));background:#1e293b;border-top:1px solid #334155}
+#prod-foot button{width:100%;padding:16px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;background:#3b82f6;color:white}
+#prod-foot button:disabled{background:#334155;color:#64748b}
+#ch{position:fixed;inset:0;background:#0a0e1a;z-index:100;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s}
+#ch.hidden{display:none}
+#ch.show{transform:translateX(0)}
+#chh{display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));background:#1e293b;border-bottom:1px solid #334155}
+#chb{width:38px;height:38px;border-radius:50%;background:#334155;border:none;color:#e2e8f0;font-size:16px;cursor:pointer;flex-shrink:0}
+#chn{font-size:15px;font-weight:600}
+#chr{font-size:11px;color:#64748b;margin-top:2px}
+#chmsgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.m{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.m.u{background:#3b82f6;color:white;align-self:flex-end;border-bottom-right-radius:4px}
+.m.a{background:#1e293b;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px}
+.m.a.th{color:#64748b;font-style:italic}
+#chia{display:flex;gap:8px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:#1e293b;border-top:1px solid #334155;align-items:flex-end}
+#chti{flex:1;padding:10px 14px;border-radius:20px;background:#0f172a;color:#e2e8f0;border:1px solid #334155;font-size:14px;resize:none;max-height:100px;font-family:inherit;outline:none}
+#chs{width:40px;height:40px;border-radius:50%;background:#3b82f6;color:white;border:none;font-size:18px;cursor:pointer;flex-shrink:0}
+#chs:disabled{opacity:.5}
+#model-toast{position:fixed;top:80px;left:16px;right:16px;background:#1e293b;border:1px solid #3b82f6;border-radius:10px;padding:12px 14px;z-index:50;display:none;font-size:12px;color:#e2e8f0;line-height:1.5}
+#model-toast.show{display:block}
+#model-toast button{margin-top:8px;width:100%;padding:10px;border-radius:8px;border:none;background:#3b82f6;color:white;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="ld"><h2>🏢 Studio AI</h2><p>Membangun kantor...</p><div class="sp"></div></div>
+<div id="c"></div>
+
+<header>
+  <h1>Studio AI <span class="badge">Otomatis</span></h1>
+  <div class="sub">Tap 🎬 → ketik topik → tunggu → ACC</div>
+</header>
+
+<div id="ctrl">
+  <button class="cb primary" id="btn-auto" title="Produksi Otomatis">🎬</button>
+  <button class="cb" id="btn-rotate">🔄</button>
+  <button class="cb" id="btn-top">⬆️</button>
+</div>
+
+<div id="model-toast">
+  <div>⚠️ Model AI belum dimuat. Download 2.4 GB sekali (pakai WiFi).</div>
+  <button id="toast-load">📥 Muat Model Sekarang</button>
+</div>
+
+<div id="legend">
+  <div class="pill active" data-f="all">🏢 Semua</div>
+  <div class="pill" data-f="3">📊 L4</div>
+  <div class="pill" data-f="2">✂️ L3</div>
+  <div class="pill" data-f="1">🎥 L2</div>
+  <div class="pill" data-f="0">✍️ L1</div>
+</div>
+
+<div id="ap">
+  <div class="h"><div class="e" id="p-e">🎯</div><div style="flex:1"><div class="n" id="p-n">Budi Santoso</div><div class="r" id="p-r">Produser</div></div></div>
+  <div class="d" id="p-d">Deskripsi</div>
+  <div class="actions">
+    <button class="close" id="btn-close">Tutup</button>
+    <button id="btn-chat">💬 Diskusi</button>
+  </div>
+</div>
+
+<div id="ch" class="hidden">
+  <div id="chh">
+    <button id="chb">←</button>
+    <div style="flex:1"><div id="chn">Budi Santoso</div><div id="chr">Produser</div></div>
+  </div>
+  <div id="chmsgs"></div>
+  <div id="chia">
+    <textarea id="chti" placeholder="Ketik pesan..." rows="1"></textarea>
+    <button id="chs">▶</button>
+  </div>
+</div>
+
+<div id="prod">
+  <div id="prodh"><h2 id="prodh-t">🎬 Produksi</h2><button id="prodc">✕</button></div>
+  <div id="prodb">
+    <div class="prog-card">
+      <div class="stage" id="stage-name">⏳ Menyiapkan...</div>
+      <div class="detail" id="stage-detail">Memulai pipeline otomatis...</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-pct" id="prog-pct">0%</div>
+    </div>
+    <div class="result-card" id="result">
+      <h3>✅ Video Siap!</h3>
+      <p>Tonton dulu, kalau suka download & upload manual ke platform.</p>
+      <div id="result-preview"></div>
+      <div class="dl-btns" id="dl-btns"></div>
+    </div>
+  </div>
+  <div id="prod-foot">
+    <button id="btn-prod-start">🎬 Mulai Produksi</button>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// PWA
+const SV=`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#0a0e1a"/><text x="256" y="290" font-size="200" fill="#10b981" text-anchor="middle" font-family="Arial" font-weight="700">🎬</text></svg>')}`;
+const _l=document.createElement('link');_l.rel='manifest';_l.href=URL.createObjectURL(new Blob([JSON.stringify({name:'Studio AI',short_name:'StudioAI',start_url:'.',display:'standalone',background_color:'#0a0e1a',theme_color:'#0a0e1a',icons:[{src:SV,sizes:'512x512',type:'image/svg+xml'}]})],{type:'application/manifest+json'}));document.head.appendChild(_l);
+
+const FC={0:{n:'Pra-Produksi',c:0x3b82f6,h:'#3b82f6'},1:{n:'Produksi',c:0x10b981,h:'#10b981'},2:{n:'Editing',c:0xf59e0b,h:'#f59e0b'},3:{n:'Pertumbuhan',c:0x8b5cf6,h:'#8b5cf6'}};
+const AGENTS=[
+{id:1,floor:0,name:'Produser',hn:'Budi Santoso',g:'M',e:'🎯',d:'Koordinasi produksi',x:-6,z:-1},
+{id:2,floor:0,name:'Peneliti',hn:'Sari Dewi',g:'F',e:'🔍',d:'Riset topik',x:-3,z:1},
+{id:3,floor:0,name:'Analis Tren',hn:'Rizki Pratama',g:'M',e:'📈',d:'Cek tren platform',x:0,z:-2},
+{id:4,floor:0,name:'Penulis Skrip',hn:'Maya Anggraini',g:'F',e:'✍️',d:'Tulis skrip',x:3,z:1},
+{id:5,floor:0,name:'Perencana Adegan',hn:'Dimas Wijaya',g:'M',e:'🎬',d:'Shot list',x:6,z:-1},
+{id:6,floor:1,name:'Pabrik Klip',hn:'Agus Setiawan',g:'M',e:'🎥',d:'Generate klip',x:-6,z:-2},
+{id:7,floor:1,name:'Pembuat Gambar',hn:'Rina Marlina',g:'F',e:'🖼️',d:'Thumbnail',x:-3,z:1},
+{id:8,floor:1,name:'Pengisi Suara',hn:'Dewi Lestari',g:'F',e:'🎙️',d:'Narasi TTS',x:0,z:-1},
+{id:9,floor:1,name:'Direktur Musik',hn:'Fajar Nugroho',g:'M',e:'🎵',d:'Musik latar',x:3,z:1},
+{id:10,floor:1,name:'Avatar',hn:'Citra Amelia',g:'F',e:'🗣️',d:'Presenter',x:6,z:-1},
+{id:11,floor:2,name:'Editor Video',hn:'Hendra Gunawan',g:'M',e:'✂️',d:'Gabung video',x:-6,z:-1},
+{id:12,floor:2,name:'Subtitle',hn:'Indah Permata',g:'F',e:'💬',d:'Caption',x:-3,z:1},
+{id:13,floor:2,name:'Thumbnail',hn:'Bayu Saputra',g:'M',e:'🎨',d:'Desain thumb',x:0,z:-2},
+{id:14,floor:2,name:'Caption',hn:'Putri Handayani',g:'F',e:'📝',d:'Caption+hashtag',x:3,z:1},
+{id:15,floor:2,name:'Brand',hn:'Eka Prasetyo',g:'M',e:'🛡️',d:'QC brand',x:5,z:-1},
+{id:16,floor:2,name:'QA',hn:'Wulan Sari',g:'F',e:'✅',d:'Final QC',x:7,z:0},
+{id:17,floor:3,name:'Analis',hn:'Arif Hidayat',g:'M',e:'📊',d:'Analisis performa',x:-6,z:0},
+{id:18,floor:3,name:'Channel',hn:'Nadia Rahmawati',g:'F',e:'📡',d:'Setup channel',x:-3,z:1},
+{id:19,floor:3,name:'Monetisasi',hn:'Yudi Hartono',g:'M',e:'💰',d:'Cek monet',x:0,z:-1},
+{id:20,floor:3,name:'Subscriber',hn:'Fitri Wulandari',g:'F',e:'🧲',d:'CTA subscribe',x:3,z:1},
+{id:21,floor:3,name:'Views',hn:'Reza Mahendra',g:'M',e:'👥',d:'Optimasi views',x:6,z:0}
+];
+
+// 3D Office
+const C=document.getElementById('c');
+const S=new THREE.Scene();S.background=new THREE.Color(0x0a0e1a);S.fog=new THREE.Fog(0x0a0e1a,40,80);
+const CAM=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,200);CAM.position.set(22,18,22);
+const R=new THREE.WebGLRenderer({antialias:true});R.setSize(innerWidth,innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;C.appendChild(R.domElement);
+const LR=new CSS2DRenderer();LR.setSize(innerWidth,innerHeight);LR.domElement.style.position='absolute';LR.domElement.style.top='0';LR.domElement.style.pointerEvents='none';C.appendChild(LR.domElement);
+const CT=new OrbitControls(CAM,R.domElement);CT.enableDamping=true;CT.dampingFactor=0.05;CT.minDistance=10;CT.maxDistance=55;CT.maxPolarAngle=Math.PI/2.05;CT.target.set(0,7,0);CT.autoRotateSpeed=0.5;
+
+S.add(new THREE.AmbientLight(0x4a5a7a,0.75));
+const ML=new THREE.DirectionalLight(0xffffff,1.3);ML.position.set(20,30,15);ML.castShadow=true;ML.shadow.mapSize.set(1024,1024);ML.shadow.camera.left=-30;ML.shadow.camera.right=30;ML.shadow.camera.top=30;ML.shadow.camera.bottom=-30;S.add(ML);
+
+const B={w:18,d:10,fh:4.2,fl:4};
+function floor(idx){
+  const y=idx*B.fh,g=new THREE.Group(),fc=FC[idx];
+  const base=new THREE.Mesh(new THREE.BoxGeometry(B.w,0.15,B.d),new THREE.MeshStandardMaterial({color:0x1a1f2e,roughness:0.9}));base.position.y=y+0.075;base.receiveShadow=true;g.add(base);
+  const cp=new THREE.Mesh(new THREE.PlaneGeometry(B.w-1,B.d-1),new THREE.MeshStandardMaterial({color:0x252b3d,roughness:1}));cp.rotation.x=-Math.PI/2;cp.position.y=y+0.16;cp.receiveShadow=true;g.add(cp);
+  const wm=new THREE.MeshStandardMaterial({color:0x0f172a,roughness:0.95});
+  const bw=new THREE.Mesh(new THREE.BoxGeometry(B.w,B.fh,0.15),wm);bw.position.set(0,y+B.fh/2,-B.d/2);g.add(bw);
+  const sg=new THREE.BoxGeometry(0.15,B.fh*0.7,B.d);
+  [-B.w/2,B.w/2].forEach(x=>{const w=new THREE.Mesh(sg,wm);w.position.set(x,y+B.fh*0.35,0);g.add(w);});
+  const st=new THREE.Mesh(new THREE.BoxGeometry(B.w,0.05,0.1),new THREE.MeshStandardMaterial({color:fc.c,emissive:fc.c,emissiveIntensity:1.3}));st.position.set(0,y+0.1,-B.d/2+0.1);g.add(st);
+  const pl=new THREE.PointLight(fc.c,1.8,18,1);pl.position.set(0,y+B.fh*0.9,0);g.add(pl);
+  const dv=document.createElement('div');dv.className='lbl fl';dv.style.background=fc.h+'e6';dv.style.color='white';dv.textContent=`L${idx+1} · ${fc.n}`;
+  const lbl=new CSS2DObject(dv);lbl.position.set(-B.w/2+2,y+B.fh-0.3,B.d/2-0.5);g.add(lbl);
+  return g;
+}
+for(let i=0;i<B.fl;i++)S.add(floor(i));
+
+function desk(){
+  const g=new THREE.Group(),tm=new THREE.MeshStandardMaterial({color:0x475569,roughness:0.7});
+  const t=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.06,0.7),tm);t.position.y=0.75;t.castShadow=true;g.add(t);
+  const lm=new THREE.MeshStandardMaterial({color:0x1e293b});
+  [-0.6,0.6].forEach(x=>{const l=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.75,0.6),lm);l.position.set(x,0.375,0);g.add(l);});
+  const m=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.42,0.04),new THREE.MeshStandardMaterial({color:0x0a0e1a,emissive:0x3b82f6,emissiveIntensity:0.5}));m.position.set(0,1.02,-0.12);m.rotation.x=-0.1;g.add(m);
+  const s=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.22,0.08),lm);s.position.set(0,0.86,-0.12);g.add(s);
+  const k=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.02,0.14),new THREE.MeshStandardMaterial({color:0x334155}));k.position.set(0,0.79,0.13);g.add(k);
+  const cm=new THREE.MeshStandardMaterial({color:0x1e293b,roughness:0.6});
+  const se=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.08,0.5),cm);se.position.set(0,0.48,0.7);se.castShadow=true;g.add(se);
+  const br=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.55,0.08),cm);br.position.set(0,0.78,0.93);g.add(br);
+  return g;
+}
+
+AGENTS.forEach(a=>{const y=a.floor*B.fh;const d=desk();d.position.set(a.x,y,a.z-0.7);S.add(d);});
+
+const SH=[0x3b82f6,0x10b981,0xf59e0b,0x8b5cf6,0xef4444,0x06b6d4,0xec4899,0x84cc16,0xf97316,0x14b8a6];
+const SK=[0xffdbac,0xf1c27d,0xe0ac69,0xc68642,0x8d5524,0xffe0bd,0xffcd94];
+const HR=[0x1a1a1a,0x3d2817,0x6b4423,0x8b4513,0x2b1b0f,0x4a3728,0x0f0f0f];
+
+function human(a){
+  const g=new THREE.Group(),isF=a.g==='F';
+  const sm=new THREE.MeshStandardMaterial({color:SH[a.id%SH.length],roughness:0.7});
+  const km=new THREE.MeshStandardMaterial({color:SK[(a.id*3)%SK.length],roughness:0.6});
+  const hm=new THREE.MeshStandardMaterial({color:HR[(a.id*7)%HR.length],roughness:0.9});
+  const pm=new THREE.MeshStandardMaterial({color:0x1e293b,roughness:0.8});
+  const shm=new THREE.MeshStandardMaterial({color:0x0f172a,roughness:0.9});
+  const to=new THREE.Mesh(new THREE.CylinderGeometry(isF?0.15:0.17,isF?0.19:0.21,0.55,8),sm);to.position.y=0.95;to.castShadow=true;g.add(to);
+  const nk=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,0.08,6),km);nk.position.y=1.25;g.add(nk);
+  const hd=new THREE.Mesh(new THREE.SphereGeometry(0.16,16,16),km);hd.position.y=1.38;hd.castShadow=true;g.add(hd);
+  if(isF){const ht=new THREE.Mesh(new THREE.SphereGeometry(0.17,16,16,0,Math.PI*2,0,Math.PI/1.7),hm);ht.position.y=1.44;g.add(ht);const hb=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.3,0.1),hm);hb.position.set(0,1.3,-0.1);g.add(hb);}
+  else{const ht=new THREE.Mesh(new THREE.SphereGeometry(0.165,16,16,0,Math.PI*2,0,Math.PI/2),hm);ht.position.y=1.42;g.add(ht);}
+  [-0.05,0.05].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(0.02,6,6),new THREE.MeshStandardMaterial({color:0x0a0e1a}));e.position.set(x,1.4,0.14);g.add(e);});
+  function mkArm(s){const ag=new THREE.Group();const u=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.04,0.32,6),sm);u.position.y=-0.16;ag.add(u);const l=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.035,0.28,6),km);l.position.y=-0.46;ag.add(l);const h=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6),km);h.position.y=-0.62;ag.add(h);ag.position.set(s*0.19,1.15,0);return ag;}
+  const la=mkArm(-1),ra=mkArm(1);g.add(la);g.add(ra);
+  function mkLeg(s){const lg=new THREE.Group();const u=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.05,0.45,6),pm);u.position.y=-0.225;lg.add(u);const l=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.045,0.42,6),pm);l.position.y=-0.66;lg.add(l);const sh=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.08,0.2),shm);sh.position.set(0,-0.9,0.03);lg.add(sh);lg.position.set(s*0.09,0.9,0);return lg;}
+  const ll=mkLeg(-1),rl=mkLeg(1);g.add(ll);g.add(rl);
+  const dv=document.createElement(
